@@ -446,10 +446,57 @@ Ipv4Route* Ipv4RoutingTableEcmp::findBestMatchingRouteEcmp(Packet *packet, const
 
 Ipv4Route* Ipv4RoutingTableEcmp::perPacketBestMatchingRouteEcmp(Packet *packet, const Ipv4Address &dest)
 {
+    //Added MOH ==> 5 tuple hashing
+    int ipProtocol = -1;
+    b ipHeaderLength = b(-1);
+    unsigned int srcPort = 0;
+    unsigned int destPort = 0;
+    #ifdef WITH_IPv4
+        if (packet->getTag<PacketProtocolTag>()->getProtocol() == &Protocol::ipv4) {
+            const auto& ipv4Header = packet->peekAtFront<Ipv4Header>();
+            ipProtocol = ipv4Header->getProtocolId();
+            ipHeaderLength = ipv4Header->getChunkLength();
+        }
+    #endif
+    #ifdef WITH_IPv6
+        if (packet->getTag<PacketProtocolTag>()->getProtocol() == &Protocol::ipv6) {
+            const auto& ipv6Header = packet->peekAtFront<Ipv6Header>();
+            ipProtocol = ipv6Header->getProtocolId();
+            ipHeaderLength = ipv6Header->getChunkLength();
+        }
+    #endif
+    #ifdef WITH_UDP
+        if (ipProtocol == IP_PROT_UDP) {
+            const auto& udpHeader = packet->peekDataAt<UdpHeader>(ipHeaderLength);
+            srcPort = udpHeader->getSourcePort();
+            destPort = udpHeader->getDestinationPort();
+        }
+    #endif
+    #ifdef WITH_TCP_COMMON
+        if (ipProtocol == IP_PROT_TCP) {
+            const auto& tcpHeader = packet->peekDataAt<tcp::TcpHeader>(ipHeaderLength);
+            srcPort = tcpHeader->getSourcePort();
+            destPort = tcpHeader->getDestinationPort();
+        }
+    #endif
+    const auto& ipv4Header = packet->peekAtFront<Ipv4Header>();
+    Ipv4Address destAddr = ipv4Header->getDestAddress();
+    Ipv4Address srcAddr = ipv4Header->getSrcAddress();
     std::string routerName = getSimulation()->getContextModule()->getFullPath();
+    std::string packetName = packet->getFullName();
+    std::hash<std::string> hash;
+    //concatenation
+    std::string key = srcAddr.str() + destAddr.str() + std::to_string(ipProtocol) + routerName + packetName;
+    size_t hashValue = hash(key);
+
+
+
+
+    //std::string routerName = getSimulation()->getContextModule()->getFullPath();
     Ipv4Route *bestRoute = nullptr;
     range = routingCache.equal_range(dest);                     // slower
     int numPossibleEcmpRoutesCaches = std::distance(range.first, range.second);                     // faster
+    //std::cout << "numPossible routes " << numPossibleEcmpRoutesCaches << endl;
     if (numPossibleEcmpRoutesCaches == 0) {
         EV_DETAIL << "Finding best match" << endl;
         for (auto e : routes) {
@@ -469,7 +516,12 @@ Ipv4Route* Ipv4RoutingTableEcmp::perPacketBestMatchingRouteEcmp(Packet *packet, 
         return it->second; // or return range.first->second;
     }
     if (numPossibleEcmpRoutesCaches > 1) {
-        int selected = ((rand() % numPossibleEcmpRoutesCaches)); // per-packet ECMP spraying pkts
+        //std::cout << packet->getFullName() << endl;
+        unsigned int hashValueIII = static_cast<int>(hashValue);
+        //std::cout << "hash value " << hashValueIII << endl;
+        int selected= hashValueIII%numPossibleEcmpRoutesCaches ; // per-flow ECMP
+        //std::cout << "selected value " << selected << endl;
+        //int selected = ((rand() % numPossibleEcmpRoutesCaches)); // per-packet ECMP spraying pkts
         int i = 0;
         for (auto it = range.first; it != range.second; ++it) {
             if (i == selected) {

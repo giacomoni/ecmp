@@ -880,16 +880,16 @@ void Ipv4Ecmp::fragmentAndSend(Packet *packet)
     //EV_INFO << "\n\n\n\n\nTIME TO LIVE2: "<< ipv4Header->getTimeToLive();
     //EV_INFO << "\n" << packet->str() << "\n\n\n\n";
     // hop counter check
-    if (ipv4Header->getTimeToLive() <= 0) {
-        // drop datagram, destruction responsibility in ICMP
-        PacketDropDetails details;
-        details.setReason(HOP_LIMIT_REACHED);
-        emit(packetDroppedSignal, packet, &details);
-        EV_WARN << "datagram TTL reached zero, sending ICMP_TIME_EXCEEDED\n";
-        sendIcmpError(packet, -1    /*TODO*/, ICMP_TIME_EXCEEDED, 0);
-        numDropped++;
-        return;
-    }
+//    if (ipv4Header->getTimeToLive() <= 0) {
+//        // drop datagram, destruction responsibility in ICMP
+//        PacketDropDetails details;
+//        details.setReason(HOP_LIMIT_REACHED);
+//        emit(packetDroppedSignal, packet, &details);
+//        EV_WARN << "datagram TTL reached zero, sending ICMP_TIME_EXCEEDED\n";
+//        sendIcmpError(packet, -1    /*TODO*/, ICMP_TIME_EXCEEDED, 0);
+//        numDropped++;
+//        return;
+//    }
 
     int mtu = destIE->getMtu();
 
