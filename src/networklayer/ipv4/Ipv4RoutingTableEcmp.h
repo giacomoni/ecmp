@@ -123,7 +123,7 @@ protected:
     virtual void refreshDisplay() const override;
 
     // delete routes for the given interface
-    virtual void deleteInterfaceRoutes(const InterfaceEntry *entry);
+    virtual void deleteInterfaceRoutes(const NetworkInterface *entry);
 
     // invalidates routing cache and local addresses cache
     virtual void invalidateCache();
@@ -198,7 +198,7 @@ public:
     /**
      * Returns an interface given by its address. Returns nullptr if not found.
      */
-    virtual InterfaceEntry* getInterfaceByAddress(const Ipv4Address &address) const override;
+    virtual NetworkInterface* getInterfaceByAddress(const Ipv4Address &address) const override;
     //@}
 
     /**
@@ -257,7 +257,7 @@ public:
      * Returns the interface entry having the specified address
      * as its local broadcast address.
      */
-    virtual InterfaceEntry* findInterfaceByLocalBroadcastAddress(const Ipv4Address &dest) const override;
+    virtual NetworkInterface* findInterfaceByLocalBroadcastAddress(const Ipv4Address &dest) const override;
 
     /**
      * The routing function. Performs longest prefix match for the given
@@ -278,7 +278,7 @@ public:
      * Returns the output interface for the packets with dest as destination
      * address, or nullptr if the destination is not in routing table.
      */
-    virtual InterfaceEntry* getInterfaceForDestAddr(const Ipv4Address &dest) const override;
+    virtual NetworkInterface* getInterfaceForDestAddr(const Ipv4Address &dest) const override;
 
     /**
      * Convenience function based on findBestMatchingRoute().
@@ -420,7 +420,7 @@ public:
     {
         return isLocalAddress(dest.toIpv4());
     }
-    virtual InterfaceEntry* getInterfaceByAddress(const L3Address &address) const override
+    virtual NetworkInterface* getInterfaceByAddress(const L3Address &address) const override
     {
         return getInterfaceByAddress(address.toIpv4());
     }
@@ -432,7 +432,7 @@ public:
     {
         return findBestMatchingRouteEcmp(packet, dest.toIpv4());
     }
-    virtual InterfaceEntry* getOutputInterfaceForDestination(const L3Address &dest) const override
+    virtual NetworkInterface* getOutputInterfaceForDestination(const L3Address &dest) const override
     {
         return getInterfaceForDestAddr(dest.toIpv4());
     }    //XXX inconsistent names

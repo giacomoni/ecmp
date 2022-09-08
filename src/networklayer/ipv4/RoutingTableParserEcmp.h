@@ -71,7 +71,7 @@ protected:
     virtual char* parseEntry(char *ifconfigFile, const char *tokenStr, int &charpointer, char *destStr);
 
     // Convert string separated by ':' into dynamic string array.
-    virtual void parseMulticastGroups(char *groupStr, InterfaceEntry*);
+    virtual void parseMulticastGroups(char *groupStr, NetworkInterface*);
 
     // Return 1 if beginning of str1 and str2 is equal up to str2-len,
     // otherwise 0.

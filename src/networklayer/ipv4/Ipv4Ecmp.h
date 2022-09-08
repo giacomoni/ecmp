@@ -43,22 +43,17 @@ class IIpv4RoutingTable;
 /**
  * Implements the Ipv4 protocol.
  */
-class INET_API Ipv4Ecmp : public OperationalBase, public NetfilterBase, public INetworkProtocol, public IProtocolRegistrationListener, public cListener
+class INET_API Ipv4Ecmp : public OperationalBase, public NetfilterBase, public INetworkProtocol, public DefaultProtocolRegistrationListener, public cListener
 {
 public:
     /**
      * Represents an Ipv4Header, queued by a Hook
      */
-    class QueuedDatagramForHook
-    {
-    public:
+    class INET_API QueuedDatagramForHook {
+      public:
         QueuedDatagramForHook(Packet *packet, IHook::Type hookType) :
-                packet(packet), hookType(hookType)
-        {
-        }
-        virtual ~QueuedDatagramForHook()
-        {
-        }
+            packet(packet), hookType(hookType) {}
+        virtual ~QueuedDatagramForHook() {}
 
         Packet *packet = nullptr;
         const IHook::Type hookType = static_cast<IHook::Type>(-1);
@@ -79,10 +74,10 @@ public:
     };
 
 protected:
-    IIpv4RoutingTable *rt = nullptr;  //TODO CHANGE BACK
-    IInterfaceTable *ift = nullptr;
-    IArp *arp = nullptr;
-    Icmp *icmp = nullptr;
+    ModuleRefByPar<IIpv4RoutingTable> rt;  //TODO CHANGE BACK
+    ModuleRefByPar<IInterfaceTable> ift;
+    ModuleRefByPar<IArp> arp;
+    ModuleRefByPar<Icmp> icmp;
     int transportInGateBaseId = -1;
 
     // config
@@ -118,12 +113,12 @@ protected:
 
 protected:
     // utility: look up interface from getArrivalGate()
-    virtual const InterfaceEntry* getSourceInterface(Packet *packet);
-    virtual const InterfaceEntry* getDestInterface(Packet *packet);
+    virtual const NetworkInterface* getSourceInterface(Packet *packet);
+    virtual const NetworkInterface* getDestInterface(Packet *packet);
     virtual Ipv4Address getNextHop(Packet *packet);
 
     // utility: look up route to the source of the datagram and return its interface
-    virtual const InterfaceEntry* getShortestPathInterfaceToSource(const Ptr<const Ipv4Header> &ipv4Header) const;
+    virtual const NetworkInterface* getShortestPathInterfaceToSource(const Ptr<const Ipv4Header> &ipv4Header) const;
 
     // utility: show current statistics above the icon
     virtual void refreshDisplay() const override;
@@ -190,7 +185,7 @@ protected:
     /**
      * Determines the output interface for the given multicast datagram.
      */
-    virtual const InterfaceEntry* determineOutgoingInterfaceForMulticastDatagram(const Ptr<const Ipv4Header> &ipv4Header, const InterfaceEntry *multicastIFOption);
+    virtual const NetworkInterface* determineOutgoingInterfaceForMulticastDatagram(const Ptr<const Ipv4Header> &ipv4Header, const NetworkInterface *multicastIFOption);
 
     /**
      * Forwards packets to all multicast destinations, using fragmentAndSend().
@@ -227,7 +222,7 @@ protected:
      */
     virtual void sendDatagramToOutput(Packet *packet);
 
-    virtual MacAddress resolveNextHopMacAddress(cPacket *packet, Ipv4Address nextHopAddr, const InterfaceEntry *destIE);
+    virtual MacAddress resolveNextHopMacAddress(cPacket *packet, Ipv4Address nextHopAddr, const NetworkInterface *destIE);
 
     virtual void sendPacketToNIC(Packet *packet);
 
@@ -243,10 +238,7 @@ public:
     virtual void handleRegisterProtocol(const Protocol &protocol, cGate *in, ServicePrimitive servicePrimitive) override;
 
 protected:
-    virtual int numInitStages() const override
-    {
-        return NUM_INIT_STAGES;
-    }
+    virtual int numInitStages() const override { return NUM_INIT_STAGES; }
     virtual void initialize(int stage) override;
     virtual void handleMessageWhenUp(cMessage *msg) override;
 
@@ -304,18 +296,9 @@ public:
     /**
      * ILifecycle methods
      */
-    virtual bool isInitializeStage(int stage) override
-    {
-        return stage == INITSTAGE_NETWORK_LAYER;
-    }
-    virtual bool isModuleStartStage(int stage) override
-    {
-        return stage == ModuleStartOperation::STAGE_NETWORK_LAYER;
-    }
-    virtual bool isModuleStopStage(int stage) override
-    {
-        return stage == ModuleStopOperation::STAGE_NETWORK_LAYER;
-    }
+    virtual bool isInitializeStage(int stage) const override { return stage == INITSTAGE_NETWORK_LAYER; }
+    virtual bool isModuleStartStage(int stage) const override { return stage == ModuleStartOperation::STAGE_NETWORK_LAYER; }
+    virtual bool isModuleStopStage(int stage) const override { return stage == ModuleStopOperation::STAGE_NETWORK_LAYER; }
     virtual void handleStartOperation(LifecycleOperation *operation) override;
     virtual void handleStopOperation(LifecycleOperation *operation) override;
     virtual void handleCrashOperation(LifecycleOperation *operation) override;

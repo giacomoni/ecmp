@@ -3,7 +3,7 @@
 	<name>ecmp</name>
 	<comment></comment>
 	<projects>
-		<project>inet4</project>
+		<project>inet4.4</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

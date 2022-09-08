@@ -15,7 +15,6 @@
 
 package ecmp.networklayer.configurator.ipv4;
 
-import inet.networklayer.configurator.base.NetworkConfiguratorBase;
 import ecmp.networklayer.configurator.base.NetworkConfiguratorBaseEcmp;
 
 simple Ipv4NetworkConfiguratorEcmp extends NetworkConfiguratorBaseEcmp

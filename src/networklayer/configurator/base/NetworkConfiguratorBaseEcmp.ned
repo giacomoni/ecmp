@@ -15,9 +15,9 @@
 
 package ecmp.networklayer.configurator.base;
 
-import inet.networklayer.configurator.contract.INetworkConfigurator;
+import inet.networklayer.configurator.contract.IL3NetworkConfigurator;
 
-simple NetworkConfiguratorBaseEcmp like INetworkConfigurator
+simple NetworkConfiguratorBaseEcmp like IL3NetworkConfigurator
 {
     parameters:
         @class("inet::physicallayer::NetworkConfiguratorBaseEcmp");

@@ -20,6 +20,7 @@
 #define NETWORKLAYER_CONFIGURATOR_IPV4_IPV4NODECONFIGURATORECMP_H_
 
 #include "inet/common/INETDefs.h"
+#include "inet/common/ModuleRefByPar.h"
 #include "inet/common/lifecycle/ILifecycle.h"
 #include "inet/common/lifecycle/NodeStatus.h"
 #include "inet/networklayer/configurator/ipv4/Ipv4NetworkConfigurator.h"
@@ -58,7 +59,7 @@ protected:
     virtual void initialize(int stage) override;
     virtual bool handleOperationStage(LifecycleOperation *operation, IDoneCallback *doneCallback) override;
     virtual void prepareAllInterfaces();
-    virtual void prepareInterface(InterfaceEntry *interfaceEntry);
+    virtual void prepareInterface(NetworkInterface *interfaceEntry);
     virtual void configureAllInterfaces();
     virtual void configureRoutingTable();
 
