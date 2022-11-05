@@ -9,8 +9,11 @@ cleanall: checkmakefiles
 	cd src && $(MAKE) MODE=debug clean
 	rm -f src/Makefile
 
-makefiles:
-	cd src && opp_makemake -f --deep
+makefilesrelease:
+	cd src && opp_makemake -f --deep --mode release
+
+makefilesdebug:
+        cd src && opp_makemake -f --deep --mode debug
 
 checkmakefiles:
 	@if [ ! -f src/Makefile ]; then \
