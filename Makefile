@@ -1,5 +1,5 @@
 all: checkmakefiles
-	cd src && $(MAKE)
+cd src && $(MAKE)
 
 clean: checkmakefiles
 	cd src && $(MAKE) clean
@@ -13,7 +13,7 @@ makefilesrelease:
 	cd src && opp_makemake -f --deep --mode release
 
 makefilesdebug:
-        cd src && opp_makemake -f --deep --mode debug
+	cd src && opp_makemake -f --deep --mode debug
 
 checkmakefiles:
 	@if [ ! -f src/Makefile ]; then \
