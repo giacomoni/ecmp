@@ -10,10 +10,10 @@ cleanall: checkmakefiles
 	rm -f src/Makefile
 
 makefilesrelease:
-	cd src && opp_makemake -f --deep --mode release
+	cd src && opp_makemake -f --deep --mode release -I${HOME}/inet4/src -L${HOME}/inet4/src -lINET
 
 makefilesdebug:
-	cd src && opp_makemake -f --deep --mode debug
+	cd src && opp_makemake -f --deep --mode debug -I${HOME}/inet4/src -L${HOME}/inet4/src -lINET_dbg
 
 checkmakefiles:
 	@if [ ! -f src/Makefile ]; then \
