@@ -1,26 +1,32 @@
 #
-# OMNeT++/OMNEST Makefile for $(LIB_PREFIX)ecmp
+# OMNeT++/OMNEST Makefile for src
 #
 # This file was generated with the command:
-#  opp_makemake --make-so -f --deep -KINET4_PROJ=../../inet4 -DINET_IMPORT -I$$\(INET4_PROJ\)/src -L$$\(INET4_PROJ\)/src -lINET$$\(D\)
+#  opp_makemake -f --deep --mode release
 #
 
 # Name of target to be created (-o option)
-TARGET = $(LIB_PREFIX)ecmp$(D)$(SHARED_LIB_SUFFIX)
+TARGET = src$(D)$(EXE_SUFFIX)
 TARGET_DIR = .
 
+# User interface (uncomment one) (-u option)
+USERIF_LIBS = $(ALL_ENV_LIBS) # that is, $(TKENV_LIBS) $(QTENV_LIBS) $(CMDENV_LIBS)
+#USERIF_LIBS = $(CMDENV_LIBS)
+#USERIF_LIBS = $(TKENV_LIBS)
+#USERIF_LIBS = $(QTENV_LIBS)
+
 # C++ include paths (with -I)
-INCLUDE_PATH = -I$(INET4_PROJ)/src
+INCLUDE_PATH =
 
 # Additional object and library files to link with
 EXTRA_OBJS =
 
 # Additional libraries (-L, -l options)
-LIBS = $(LDFLAG_LIBPATH)$(INET4_PROJ)/src  -lINET$(D)
+LIBS =
 
 # Output directory
-PROJECT_OUTPUT_DIR = ../out
-PROJECTRELATIVE_PATH = src
+PROJECT_OUTPUT_DIR = out
+PROJECTRELATIVE_PATH =
 O = $(PROJECT_OUTPUT_DIR)/$(CONFIGNAME)/$(PROJECTRELATIVE_PATH)
 
 # Object files for local .cc, .msg and .sm files
@@ -40,8 +46,10 @@ MSGFILES =
 # SM files
 SMFILES =
 
-# Other makefile variables (-K)
-INET4_PROJ=../../inet4
+# Default mode (-M option); can be overridden with make MODE=debug (or =release)
+ifndef MODE
+MODE = release
+endif
 
 #------------------------------------------------------------------------------
 
@@ -64,12 +72,9 @@ endif
 include $(CONFIGFILE)
 
 # Simulation kernel and user interface libraries
-OMNETPP_LIBS = -loppenvir$D $(KERNEL_LIBS) $(SYS_LIBS)
-ifneq ($(TOOLCHAIN_NAME),clangc2)
-LIBS += -Wl,-rpath,$(abspath $(INET4_PROJ)/src)
-endif
+OMNETPP_LIBS = $(OPPMAIN_LIB) $(USERIF_LIBS) $(KERNEL_LIBS) $(SYS_LIBS)
 
-COPTS = $(CFLAGS) $(IMPORT_DEFINES) -DINET_IMPORT $(INCLUDE_PATH) -I$(OMNETPP_INCL_DIR)
+COPTS = $(CFLAGS) $(IMPORT_DEFINES)  $(INCLUDE_PATH) -I$(OMNETPP_INCL_DIR)
 MSGCOPTS = $(INCLUDE_PATH)
 SMCOPTS =
 
@@ -99,9 +104,8 @@ endif
 
 $O/$(TARGET): $(OBJS)  $(wildcard $(EXTRA_OBJS)) Makefile $(CONFIGFILE)
 	@$(MKPATH) $O
-	@echo Creating shared library: $@
-	$(Q)$(SHLIB_LD) -o $O/$(TARGET) $(OBJS) $(EXTRA_OBJS) $(AS_NEEDED_OFF) $(WHOLE_ARCHIVE_ON) $(LIBS) $(WHOLE_ARCHIVE_OFF) $(OMNETPP_LIBS) $(LDFLAGS)
-	$(Q)$(SHLIB_POSTPROCESS) $O/$(TARGET)
+	@echo Creating executable: $@
+	$(Q)$(CXX) $(LDFLAGS) -o $O/$(TARGET) $(OBJS) $(EXTRA_OBJS) $(AS_NEEDED_OFF) $(WHOLE_ARCHIVE_ON) $(LIBS) $(WHOLE_ARCHIVE_OFF) $(OMNETPP_LIBS)
 
 .PHONY: all clean cleanall depend msgheaders smheaders
 
