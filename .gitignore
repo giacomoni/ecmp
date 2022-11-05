@@ -1,5 +1,8 @@
 # local and generated files not to be committed
 
+src/ecmp
+src/ecmp_dbg
+src/Makefile
 
 *_m.h
 *_m.cc
