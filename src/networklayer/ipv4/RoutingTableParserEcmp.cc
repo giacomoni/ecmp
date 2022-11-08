@@ -143,7 +143,7 @@ void RoutingTableParserEcmp::parseInterfaces(char *ifconfigFile)
 {
     char buf[MAX_ENTRY_STRING_SIZE];
     int charpointer = 0;
-    InterfaceEntry *ie = nullptr;
+    NetworkInterface *ie = nullptr;
 
     // parsing of entries in interface definition
     while (ifconfigFile[charpointer] != '\0') {
@@ -182,7 +182,7 @@ void RoutingTableParserEcmp::parseInterfaces(char *ifconfigFile)
         if (streq(ifconfigFile + charpointer, "inet_addr:")) {
             if (!ie)
                 throw cRuntimeError("Error in routing file: missing the `name:' entry");
-            ie->getProtocolData<Ipv4InterfaceData>()->setIPAddress(Ipv4Address(parseEntry(ifconfigFile, "inet_addr:", charpointer, buf)));
+            ie->getProtocolDataForUpdate<Ipv4InterfaceData>()->setIPAddress(Ipv4Address(parseEntry(ifconfigFile, "inet_addr:", charpointer, buf)));
             continue;
         }
 
@@ -199,7 +199,7 @@ void RoutingTableParserEcmp::parseInterfaces(char *ifconfigFile)
         if (streq(ifconfigFile + charpointer, "Mask:")) {
             if (!ie)
                 throw cRuntimeError("Error in routing file: missing the `name:' entry");
-            ie->getProtocolData<Ipv4InterfaceData>()->setNetmask(Ipv4Address(parseEntry(ifconfigFile, "Mask:", charpointer, buf)));
+            ie->getProtocolDataForUpdate<Ipv4InterfaceData>()->setNetmask(Ipv4Address(parseEntry(ifconfigFile, "Mask:", charpointer, buf)));
             continue;
         }
 
@@ -224,7 +224,7 @@ void RoutingTableParserEcmp::parseInterfaces(char *ifconfigFile)
         if (streq(ifconfigFile + charpointer, "Metric:")) {
             if (!ie)
                 throw cRuntimeError("Error in routing file: missing the `name:' entry");
-            ie->getProtocolData<Ipv4InterfaceData>()->setMetric(atoi(parseEntry(ifconfigFile, "Metric:", charpointer, buf)));
+            ie->getProtocolDataForUpdate<Ipv4InterfaceData>()->setMetric(atoi(parseEntry(ifconfigFile, "Metric:", charpointer, buf)));
             continue;
         }
 
@@ -277,13 +277,13 @@ char* RoutingTableParserEcmp::parseEntry(char *ifconfigFile, const char *tokenSt
     return destStr;
 }
 
-void RoutingTableParserEcmp::parseMulticastGroups(char *groupStr, InterfaceEntry *itf)
+void RoutingTableParserEcmp::parseMulticastGroups(char *groupStr, NetworkInterface *itf)
 {
     // Parse string (Ipv4 addresses separated by colons)
     cStringTokenizer tokenizer(groupStr, ":");
     const char *token;
     while ((token = tokenizer.nextToken()) != nullptr)
-        itf->getProtocolData<Ipv4InterfaceData>()->joinMulticastGroup(Ipv4Address(token));
+        itf->getProtocolDataForUpdate<Ipv4InterfaceData>()->joinMulticastGroup(Ipv4Address(token));
 }
 
 void RoutingTableParserEcmp::parseRouting(char *routeFile)
@@ -356,7 +356,7 @@ void RoutingTableParserEcmp::parseRouting(char *routeFile)
         interfaceName.reserve(MAX_ENTRY_STRING_SIZE);
         pos += strcpyword(interfaceName.buffer(), routeFile + pos);
         skipBlanks(routeFile, pos);
-        InterfaceEntry *ie = ift->findInterfaceByName(interfaceName.c_str());
+        NetworkInterface *ie = ift->findInterfaceByName(interfaceName.c_str());
         if (!ie)
             throw cRuntimeError("Syntax error in routing file: 6th column: `%s' is not an existing interface", interfaceName.c_str());
 

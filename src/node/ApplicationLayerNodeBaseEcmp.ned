@@ -41,14 +41,14 @@ module ApplicationLayerNodeBaseEcmp extends TransportLayerNodeBaseEcmp
             app[i].socketIn <-- at.out++;
         }
 
-        at.out++ --> udp.appIn if hasUdp;
-        at.in++ <-- udp.appOut if hasUdp;
-
-        at.out++ --> tcp.appIn if hasTcp;
-        at.in++ <-- tcp.appOut if hasTcp;
-
-        at.out++ --> sctp.appIn if hasSctp;
-        at.in++ <-- sctp.appOut if hasSctp;
+//        at.out++ --> udp.appIn if hasUdp;
+//        at.in++ <-- udp.appOut if hasUdp;
+//
+//        at.out++ --> tcp.appIn if hasTcp;
+//        at.in++ <-- tcp.appOut if hasTcp;
+//
+//        at.out++ --> sctp.appIn if hasSctp;
+//        at.in++ <-- sctp.appOut if hasSctp;
         
         at.out++ --> tn.in++;
         at.in++ <-- tn.out++;

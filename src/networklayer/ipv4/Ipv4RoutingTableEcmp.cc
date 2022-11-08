@@ -138,7 +138,7 @@ void Ipv4RoutingTableEcmp::configureRouterId()
         if (!strcmp(routerIdStr, "auto")) {    // non-"auto" cases already handled earlier
             // choose highest interface address as routerId
             for (int i = 0; i < ift->getNumInterfaces(); ++i) {
-                InterfaceEntry *ie = ift->getInterface(i);
+                NetworkInterface *ie = ift->getInterface(i);
                 if (!ie->isLoopback()) {
                     auto ipv4Data = ie->findProtocolData<Ipv4InterfaceData>();
                     if (ipv4Data && ipv4Data->getIPAddress().getInt() > routerId.getInt()) {
@@ -152,8 +152,8 @@ void Ipv4RoutingTableEcmp::configureRouterId()
               // if there is no interface with routerId yet, assign it to the loopback address;
               // TODO find out if this is a good practice, in which situations it is useful etc.
         if (getInterfaceByAddress(routerId) == nullptr) {
-            InterfaceEntry *lo0 = CHK(ift->findFirstLoopbackInterface());
-            auto ipv4Data = lo0->getProtocolData<Ipv4InterfaceData>();
+            NetworkInterface *lo0 = CHK(ift->findFirstLoopbackInterface());
+            auto ipv4Data = lo0->getProtocolDataForUpdate<Ipv4InterfaceData>();
             ipv4Data->setIPAddress(routerId);
             ipv4Data->setNetmask(Ipv4Address::ALLONES_ADDRESS);
         }
@@ -180,8 +180,8 @@ void Ipv4RoutingTableEcmp::receiveSignal(cComponent *source, simsignal_t signalI
     if (getSimulation()->getContextType() == CTX_INITIALIZE)
         return; // ignore notifications during initialize
 
-    Enter_Method_Silent
-    ();
+    Enter_Method("%s", cComponent::getSignalName(signalID));
+
     printSignalBanner(signalID, obj, details);
 
     if (signalID == interfaceCreatedSignal) {
@@ -191,16 +191,16 @@ void Ipv4RoutingTableEcmp::receiveSignal(cComponent *source, simsignal_t signalI
     }
     else if (signalID == interfaceDeletedSignal) {
         // remove all routes that point to that interface
-        const InterfaceEntry *entry = check_and_cast<const InterfaceEntry*>(obj);
+        const NetworkInterface *entry = check_and_cast<const NetworkInterface*>(obj);
         deleteInterfaceRoutes(entry);
         invalidateCache();
     }
     else if (signalID == interfaceStateChangedSignal) {
         invalidateCache();
-        const auto *ieChangeDetails = check_and_cast<const InterfaceEntryChangeDetails*>(obj);
+        const auto *ieChangeDetails = check_and_cast<const NetworkInterfaceChangeDetails*>(obj);
         auto fieldId = ieChangeDetails->getFieldId();
-        if (fieldId == InterfaceEntry::F_STATE || fieldId == InterfaceEntry::F_CARRIER) {
-            const auto *entry = ieChangeDetails->getInterfaceEntry();
+        if (fieldId == NetworkInterface::F_STATE || fieldId == NetworkInterface::F_CARRIER) {
+            const auto *entry = ieChangeDetails->getNetworkInterface();
             updateNetmaskRoutes();
             if (!entry->isUp())
                 deleteInterfaceRoutes(entry);
@@ -223,7 +223,7 @@ cModule* Ipv4RoutingTableEcmp::getHostModule()
     return findContainingNode(this);
 }
 
-void Ipv4RoutingTableEcmp::deleteInterfaceRoutes(const InterfaceEntry *entry)
+void Ipv4RoutingTableEcmp::deleteInterfaceRoutes(const NetworkInterface *entry)
 {
     // delete unicast routes using this interface
     for (auto it = routes.begin(); it != routes.end();) {
@@ -274,7 +274,7 @@ void Ipv4RoutingTableEcmp::printRoutingTable() const
 
     for (int i = 0; i < getNumRoutes(); i++) {
         Ipv4Route *route = getRoute(i);
-        InterfaceEntry *interfacePtr = route->getInterface();
+        NetworkInterface *interfacePtr = route->getInterface();
         EV
                 << stringf("%-16s %-16s %-16s %-4s %-16s %6d\n", route->getDestination().isUnspecified() ? "*" : route->getDestination().str().c_str(), route->getNetmask().isUnspecified() ? "*" : route->getNetmask().str().c_str(),
                         route->getGateway().isUnspecified() ? "*" : route->getGateway().str().c_str(), !interfacePtr ? "*" : interfacePtr->getInterfaceName(),
@@ -314,7 +314,7 @@ std::vector<Ipv4Address> Ipv4RoutingTableEcmp::gatherAddresses() const
 
 //---
 
-InterfaceEntry* Ipv4RoutingTableEcmp::getInterfaceByAddress(const Ipv4Address &addr) const
+NetworkInterface* Ipv4RoutingTableEcmp::getInterfaceByAddress(const Ipv4Address &addr) const
 {
     Enter_Method
     ("getInterfaceByAddress(%u.%u.%u.%u)", addr.getDByte(0), addr.getDByte(1), addr.getDByte(2), addr.getDByte(3));    // note: str().c_str() too slow here
@@ -322,7 +322,7 @@ InterfaceEntry* Ipv4RoutingTableEcmp::getInterfaceByAddress(const Ipv4Address &a
     if (addr.isUnspecified())
         return nullptr;
     for (int i = 0; i < ift->getNumInterfaces(); ++i) {
-        InterfaceEntry *ie = ift->getInterface(i);
+        NetworkInterface *ie = ift->getInterface(i);
         if (ie->hasNetworkAddress(addr))
             return ie;
     }
@@ -352,7 +352,7 @@ bool Ipv4RoutingTableEcmp::isLocalBroadcastAddress(const Ipv4Address &dest) cons
     if (localBroadcastAddresses.empty()) {
         // collect interface addresses if not yet done
         for (int i = 0; i < ift->getNumInterfaces(); i++) {
-            InterfaceEntry *ie = ift->getInterface(i);
+            NetworkInterface *ie = ift->getInterface(i);
             if (!ie->isBroadcast())
                 continue;
             Ipv4Address interfaceAddr = ie->getProtocolData<Ipv4InterfaceData>()->getIPAddress();
@@ -367,10 +367,10 @@ bool Ipv4RoutingTableEcmp::isLocalBroadcastAddress(const Ipv4Address &dest) cons
     return it != localBroadcastAddresses.end();
 }
 
-InterfaceEntry* Ipv4RoutingTableEcmp::findInterfaceByLocalBroadcastAddress(const Ipv4Address &dest) const
+NetworkInterface* Ipv4RoutingTableEcmp::findInterfaceByLocalBroadcastAddress(const Ipv4Address &dest) const
 {
     for (int i = 0; i < ift->getNumInterfaces(); i++) {
-        InterfaceEntry *ie = ift->getInterface(i);
+        NetworkInterface *ie = ift->getInterface(i);
         if (!ie->isBroadcast())
             continue;
         Ipv4Address interfaceAddr = ie->getProtocolData<Ipv4InterfaceData>()->getIPAddress();
@@ -387,7 +387,7 @@ bool Ipv4RoutingTableEcmp::isLocalMulticastAddress(const Ipv4Address &dest) cons
     ("isLocalMulticastAddress(%u.%u.%u.%u)", dest.getDByte(0), dest.getDByte(1), dest.getDByte(2), dest.getDByte(3));    // note: str().c_str() too slow here
 
     for (int i = 0; i < ift->getNumInterfaces(); i++) {
-        InterfaceEntry *ie = ift->getInterface(i);
+        NetworkInterface *ie = ift->getInterface(i);
         if (ie->getProtocolData<Ipv4InterfaceData>()->isMemberOfMulticastGroup(dest))
             return true;
     }
@@ -615,7 +615,7 @@ Ipv4Route* Ipv4RoutingTableEcmp::perFlowBestMatchingRouteEcmp(Packet *packet, co
     return bestRoute; // shouldn't be reached
 }
 
-InterfaceEntry* Ipv4RoutingTableEcmp::getInterfaceForDestAddr(const Ipv4Address &dest) const
+NetworkInterface* Ipv4RoutingTableEcmp::getInterfaceForDestAddr(const Ipv4Address &dest) const
 {
     Enter_Method
     ("getInterfaceForDestAddr(%u.%u.%u.%u)", dest.getDByte(0), dest.getDByte(1), dest.getDByte(2), dest.getDByte(3));    // note: str().c_str() too slow here
@@ -922,7 +922,7 @@ void Ipv4RoutingTableEcmp::updateNetmaskRoutes()
     // TODO: and it is not on the same link, and the gateway does not use proxy ARP, how will packets reach that node?
     PatternMatcher interfaceNameMatcher(netmaskRoutes, false, true, true);
     for (int i = 0; i < ift->getNumInterfaces(); i++) {
-        InterfaceEntry *ie = ift->getInterface(i);
+        NetworkInterface *ie = ift->getInterface(i);
         if (ie->isUp() && interfaceNameMatcher.matches(ie->getFullName())) {
             auto ipv4Data = ie->findProtocolData<Ipv4InterfaceData>();
             if (ipv4Data && ipv4Data->getNetmask() != Ipv4Address::ALLONES_ADDRESS) {

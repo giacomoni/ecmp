@@ -119,7 +119,7 @@ void Ipv4NodeConfiguratorEcmp::prepareAllInterfaces()
         prepareInterface(interfaceTable->getInterface(i));
 }
 
-void Ipv4NodeConfiguratorEcmp::prepareInterface(InterfaceEntry *interfaceEntry)
+void Ipv4NodeConfiguratorEcmp::prepareInterface(NetworkInterface *interfaceEntry)
 {
     // ASSERT(!interfaceEntry->getProtocolData<Ipv4InterfaceData>());
     Ipv4InterfaceData *interfaceData = interfaceEntry->addProtocolData<Ipv4InterfaceData>();
@@ -170,7 +170,7 @@ void Ipv4NodeConfiguratorEcmp::receiveSignal(cComponent *source, simsignal_t sig
     printSignalBanner(signalID, obj, details);
 
     if (signalID == interfaceCreatedSignal) {
-        auto *entry = check_and_cast<InterfaceEntry*>(obj);
+        auto *entry = check_and_cast<NetworkInterface*>(obj);
         prepareInterface(entry);
         // TODO
     }
@@ -178,10 +178,10 @@ void Ipv4NodeConfiguratorEcmp::receiveSignal(cComponent *source, simsignal_t sig
         // The RoutingTable deletes routing entries of interface
     }
     else if (signalID == interfaceStateChangedSignal) {
-        const auto *ieChangeDetails = check_and_cast<const InterfaceEntryChangeDetails*>(obj);
+        const auto *ieChangeDetails = check_and_cast<const NetworkInterfaceChangeDetails*>(obj);
         auto fieldId = ieChangeDetails->getFieldId();
-        if (fieldId == InterfaceEntry::F_STATE || fieldId == InterfaceEntry::F_CARRIER) {
-            auto *entry = ieChangeDetails->getInterfaceEntry();
+        if (fieldId == NetworkInterface::F_STATE || fieldId == NetworkInterface::F_CARRIER) {
+            auto *entry = ieChangeDetails->getNetworkInterface();
             if (entry->isUp() && networkConfigurator) {
                 networkConfigurator->configureInterface(entry);
                 if (par("configureRoutingTable"))
